@@ -24,6 +24,7 @@ var budgetController = (function() {
         }
     };
 
+
     return {
         addItem: function(type, desc, val) {
             var newItem, ID;
@@ -51,8 +52,12 @@ var budgetController = (function() {
             return newItem;
         },
 
+        testing : function() { 
+            console.log(data);
+        }
 
-    }
+        }
+
 })();
 
 
@@ -98,6 +103,24 @@ var UIController = (function() {
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
         },
 
+        clearFields: function() {
+            var fields, fieldArr;
+
+            fields = document.querySelectorAll(DOMStrings.inputDescription + ',' + DOMStrings.inputValue);
+
+            //fields will return a list, but we want to loop over it so we wisely convert it into array
+            fieldArr = Array.prototype.slice.call(fields);
+
+            // loop over fieldArr
+            fieldArr.forEach(function(curval, index, array)  {
+                curval.value = "";                
+            });
+
+            // set focus back to the description
+            fieldArr[0].focus();
+
+        },
+
         getDOMStrings :function() {
             return DOMStrings
         }
@@ -124,7 +147,15 @@ var controller = (function(budgetCtrl, UICtrl) {
 
         });
 
-    }    
+    }
+    
+    var updateBudget = function() {
+
+        // 5 - Calculate the budget
+        // 5b - Return the budget
+        // 6 - display the budget on the UI
+
+    }
 
     var ctrlAddItem = function() {
         
@@ -137,8 +168,13 @@ var controller = (function(budgetCtrl, UICtrl) {
         
         // 3 - Add the new item to the UI
         UICtrl.addListItem(newItem, input.type);
-        // 4 - Calculate the budget
-        // 5 - display the budget on the UI
+
+        //4 - Clear the fields
+        UICtrl.clearFields();
+
+        //5 - Calculate and update budget
+        updateBudget();
+        
 
     }
 
