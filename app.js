@@ -5,6 +5,21 @@ var budgetController = (function() {
         this.id = id;
         this.description = description;
         this.value = value;
+        this.percentage = -1;
+    };
+
+    // this function calculates the percentages
+    Expense.prototype.calcPercentage = function(totalIncome) {
+        if (totalIncome > 0) {
+            this.percentage = Math.round((this.value / totalIncome) * 100);
+        } else {
+            this.percentage = -1;
+        }
+    }; 
+
+    // this function returns the calculated percentages
+    Expense.prototype.getPercentage = function() {
+        return this.percentage;
     };
 
     var Income = function(id, description, value) {
@@ -92,8 +107,19 @@ var budgetController = (function() {
             } else {
                 data.percentage = -1;
             }
-            
+        },
 
+        calculatePercentages : function() {
+            data.allItems.exp.forEach(function(cur) {
+                cur.calcPercentage(data.totals.inc);
+            });
+        },
+
+        getPercentages : function() {
+            var allPerc = data.allItems.exp.map(function(cur) {
+                return cur.getPercentage();
+            });
+            return allPerc;
         },
 
         // a function to retreive the data so that we can return it and display on the UI
@@ -130,7 +156,8 @@ var UIController = (function() {
         incomeLabel : '.budget__income--value',
         expensesLabel : '.budget__expenses--value',
         percentageLabel: '.budget__expenses--percentage',
-        container: '.container'
+        container: '.container',
+        expensesPercLabel: '.item__percentage'
 
     }
 
@@ -184,6 +211,31 @@ var UIController = (function() {
 
             // set focus back to the description
             fieldArr[0].focus();
+
+        },
+
+        displayPercentages : function(percentages) {
+            // this will return a nodelist
+            var fields = document.querySelectorAll(DOMStrings.expensesPercLabel);
+
+            // we can convert the nodelist to an array by using the slice hack
+            // but instead why dont we create our own foreach function for nodelists
+            // we can use this function in any of our app we make, its not specific for this one
+            var nodeListForEach = function(list, callback) {
+                for(var i=0; i<list.length; i++) {
+                    callback(list[i], i); 
+                }
+            ;}
+
+            // calling the function
+            nodeListForEach(fields, function(current, index) {
+                if (percentages[index] > 0) {
+                    current.textContent = percentages[index] + '%';
+                } else {
+                    current.textContent = '---';
+                }
+                
+            });
 
         },
 
@@ -248,6 +300,18 @@ var controller = (function(budgetCtrl, UICtrl) {
         UICtrl.displayBudget(budget);
     }
 
+    var updatePercentages = function() {
+
+        // 1. Calculate percentages
+        budgetCtrl.calculatePercentages();
+
+        // 2. Read percentages from the budget controller
+        var percentages = budgetCtrl.getPercentages();
+
+        // 3. Update the UI with the new percentages
+        UICtrl.displayPercentages(percentages);
+    };
+
     var ctrlAddItem = function() {
         
         var input, newItem;
@@ -261,11 +325,14 @@ var controller = (function(budgetCtrl, UICtrl) {
             // 3 - Add the new item to the UI
             UICtrl.addListItem(newItem, input.type);
 
-            //4 - Clear the fields
+            // 4 - Clear the fields
             UICtrl.clearFields();
 
-            //5 - Calculate and update budget
+            // 5 - Calculate and update budget
             updateBudget();
+
+            // 6 - Calculate and update the percentages
+            updatePercentages();
         }
     
     }
@@ -290,6 +357,9 @@ var controller = (function(budgetCtrl, UICtrl) {
 
             // 3. Update and show the new budget
             updateBudget();
+
+            // 4 - Calculate and update the percentages
+            updatePercentages();
         }
         
     }
