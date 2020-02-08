@@ -157,7 +157,8 @@ var UIController = (function() {
         expensesLabel : '.budget__expenses--value',
         percentageLabel: '.budget__expenses--percentage',
         container: '.container',
-        expensesPercLabel: '.item__percentage'
+        expensesPercLabel: '.item__percentage',
+        dateLabel: '.budget__title--month'
 
     };
 
@@ -178,6 +179,12 @@ var UIController = (function() {
 
         return (type === 'exp' ?'-' :'+') + ' ' + integerr + '.' + decimalpart;
 
+    };
+
+    var nodeListForEach = function(list, callback) {
+        for(var i=0; i<list.length; i++) {
+            callback(list[i], i); 
+        }
     };
 
     return {
@@ -240,11 +247,7 @@ var UIController = (function() {
             // we can convert the nodelist to an array by using the slice hack
             // but instead why dont we create our own foreach function for nodelists
             // we can use this function in any of our app we make, its not specific for this one
-            var nodeListForEach = function(list, callback) {
-                for(var i=0; i<list.length; i++) {
-                    callback(list[i], i); 
-                }
-            ;}
+            
 
             // calling the function
             nodeListForEach(fields, function(current, index) {
@@ -273,6 +276,32 @@ var UIController = (function() {
             } else {
                 document.querySelector(DOMStrings.percentageLabel).textContent = "---";
             }
+
+        },
+
+        displayMonth : function() {
+            var now, month, year;
+            
+            now = new Date();
+            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            month = now.getMonth();
+            year = now.getFullYear();
+            document.querySelector(DOMStrings.dateLabel).textContent = months[month] + ', ' + year;
+        },
+
+        changedType : function() {
+
+            var fields = document.querySelectorAll(
+                DOMStrings.inputType + ',' + 
+                DOMStrings.inputDescription + ',' +
+                DOMStrings.inputValue 
+            );
+
+            nodeListForEach(fields, function(cur) {
+                cur.classList.toggle('red-focus');
+            });
+
+
 
         },
 
@@ -306,7 +335,10 @@ var controller = (function(budgetCtrl, UICtrl) {
         // we add event listener to the container because it is the parent where all of the stuff is happening
         document.querySelector(DOM.container).addEventListener('click', ctrlDelItem);
 
+        document.querySelector(DOM.inputType).addEventListener('change', UICtrl.changedType);
     }
+
+    
     
     // Updates the budget
     var updateBudget = function() {
@@ -388,6 +420,7 @@ var controller = (function(budgetCtrl, UICtrl) {
     return {
         init: function() {
             console.log("Application has started");
+            UICtrl.displayMonth();
             UICtrl.displayBudget({
                 budget : 0,
                 totalInc : 0,
